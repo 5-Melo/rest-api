@@ -5,28 +5,39 @@ import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public class Task {
+
     @Id
     private String id;
-
     @NotBlank(message = "Title shouldn't be empty")
     private String title;
     private String description;
 
+    private List<String> labelIds;
+    private String statusId;
+    private List<String> dependencyIds;
+
+    //hours and dates
     @CreatedDate
-    private LocalDateTime createDate;
-    private LocalDateTime dueDate;
-    private LocalDateTime startDate;
-    private LocalDateTime endDate;
+    private LocalDateTime createDate;//auto set
+    private LocalDateTime lastUpdateTime;//auto set
+    private LocalDateTime dueDate;//set by user
+    private LocalDateTime startDate;//set by user
+    private LocalDateTime endDate;//set by user
+    private Double estimatedHours;//set by user
+    private Double actualHours;//auto set after finish task
 
-    private Double estimatedHours;
-    private Double actualHours;
-
-    public Task(String title, String description, LocalDateTime createDate, LocalDateTime dueDate, LocalDateTime startDate, LocalDateTime endDate, Double estimatedHours, Double actualHours) {
+    public Task(String id, String title, String description, List<String> labelIds, String statusId, List<String> dependencyIds, LocalDateTime createDate, LocalDateTime lastUpdateTime, LocalDateTime dueDate, LocalDateTime startDate, LocalDateTime endDate, Double estimatedHours, Double actualHours) {
+        this.id = id;
         this.title = title;
         this.description = description;
+        this.labelIds = labelIds;
+        this.statusId = statusId;
+        this.dependencyIds = dependencyIds;
         this.createDate = createDate;
+        this.lastUpdateTime = lastUpdateTime;
         this.dueDate = dueDate;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -60,6 +71,30 @@ public class Task {
 
     public LocalDateTime getCreateDate() {
         return createDate;
+    }
+
+    public List<String> getLabelIds() {
+        return labelIds;
+    }
+
+    public void setLabelIds(List<String> labelIds) {
+        this.labelIds = labelIds;
+    }
+
+    public String getStatusId() {
+        return statusId;
+    }
+
+    public void setStatusId(String statusId) {
+        this.statusId = statusId;
+    }
+
+    public List<String> getDependencyIds() {
+        return dependencyIds;
+    }
+
+    public void setDependencyIds(List<String> dependencyIds) {
+        this.dependencyIds = dependencyIds;
     }
 
     public void setCreateDate(LocalDateTime createDate) {
@@ -104,5 +139,13 @@ public class Task {
 
     public void setActualHours(Double actualHours) {
         this.actualHours = actualHours;
+    }
+
+    public LocalDateTime getLastUpdateTime() {
+        return lastUpdateTime;
+    }
+
+    public void setLastUpdateTime(LocalDateTime lastUpdateTime) {
+        this.lastUpdateTime = lastUpdateTime;
     }
 }
