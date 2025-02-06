@@ -22,7 +22,7 @@ public class UserController {
         return (ArrayList<User>) this.userRepository.findAll();
     }
 
-    @GetMapping("{id}")
+    @GetMapping("/{id}")
     private ResponseEntity<Optional<User>> getUser(@PathVariable String id) {
         Optional<User> user = this.userRepository.findById(id);
 
