@@ -10,7 +10,7 @@ import java.util.List;
  * Controller for managing labels.
  */
 @RestController
-@RequestMapping("users/{userId}/projects/{projectId}/labels")
+@RequestMapping("api/users/{userId}/projects/{projectId}/labels")
 public class LabelController {
     private final LabelService labelService;
 

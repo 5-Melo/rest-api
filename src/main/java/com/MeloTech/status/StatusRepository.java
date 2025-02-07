@@ -21,10 +21,20 @@ public interface StatusRepository extends MongoRepository<Status, String> {
     Optional<Status> findByNameAndProjectId(String name, String projectId);
 
     /**
+     * Finds a status by its ID and project ID.
+     *
+     * @param id        The ID of the status.
+     * @param projectId The ID of the project.
+     * @return An optional containing the status if found and it belongs to the project.
+     */
+    Optional<Status> findByIdAndProjectId(String id, String projectId);
+
+    /**
      * Finds all statuses in a project.
      *
      * @param projectId The ID of the project.
      * @return A list of statuses in the project.
      */
     List<Status> findByProjectId(String projectId);
+
 }

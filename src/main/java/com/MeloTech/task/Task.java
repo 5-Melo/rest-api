@@ -18,7 +18,7 @@ public class Task {
     private List<String> labelIds;
     private String statusId;
     private List<String> dependencyIds;
-
+    private String projectId;
     //hours and dates
     @CreatedDate
     private LocalDateTime createDate;//auto set
@@ -43,6 +43,15 @@ public class Task {
         this.endDate = endDate;
         this.estimatedHours = estimatedHours;
         this.actualHours = actualHours;
+    }
+
+
+    public String getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(String projectId) {
+        this.projectId = projectId;
     }
 
     public String getId() {
