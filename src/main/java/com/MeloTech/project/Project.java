@@ -1,5 +1,6 @@
 package com.MeloTech.project;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import org.springframework.data.annotation.Id;
 
 import java.time.LocalDate;
@@ -8,6 +9,7 @@ import java.util.ArrayList;
 public class Project {
 
     @Id
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private String id;
     private String title;
     private String description;
@@ -15,6 +17,7 @@ public class Project {
     private LocalDate endDate;
     private Status status;
     private ArrayList<String> teamMembers;  // Reference username's for each member
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY)
     private String projectOwner; // Reference username for user who created the project
 
     public Project(String title, String description, LocalDate startDate, LocalDate endDate, String projectOwner) {

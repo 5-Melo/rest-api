@@ -47,7 +47,7 @@ public class ProjectService {
 
     }
 
-    Project deleteProject(String userId, String projectId) {
+    void deleteProject(String userId, String projectId) {
         Optional<User> currentUserOptional = this.userRepository.findById(userId);
         if (currentUserOptional.isEmpty())
             throw new IllegalArgumentException("User with ID " + userId + " not found!");
@@ -79,7 +79,6 @@ public class ProjectService {
         } else this.projectRepository.save(project);
 
 
-        return null;
     }
 
     ArrayList<Project> getAllProjects(String userId) {
