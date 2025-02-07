@@ -1,5 +1,6 @@
 package com.MeloTech.user;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
@@ -12,6 +13,8 @@ import java.util.ArrayList;
 public class User {
 
     @Id
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY) // exclude from request body when generating API documentation
+
     private String id;
 
     @NotBlank(message = "firstName shouldn't be empty")
@@ -36,6 +39,7 @@ public class User {
     @NotBlank(message = "email shouldn't be empty")
     @Email(message = "email format is required")
     private String email;
+    @Schema(accessMode = Schema.AccessMode.READ_ONLY) // exclude from request body when generating API documentation
 
     private ArrayList<String> projectIds = new ArrayList<>(); // Reference IDs for each project
 

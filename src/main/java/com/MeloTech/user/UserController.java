@@ -84,7 +84,7 @@ public class UserController {
             ),
             @ApiResponse(
                     responseCode = "409",
-                    description = "SignUp Failed",
+                    description = "Conflict in the provided resources",
                     content = @Content(
                             mediaType = "text/plain",
                             examples = @ExampleObject(value = "username/email already existed")
