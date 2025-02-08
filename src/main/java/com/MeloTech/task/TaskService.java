@@ -5,11 +5,13 @@ import com.MeloTech.label.LabelRepository;
 import com.MeloTech.label.LabelService;
 import com.MeloTech.status.Status;
 import com.MeloTech.status.StatusRepository;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.RequestBody;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -35,9 +37,9 @@ public class TaskService {
      * @return The created task.
      */
     public Task createTask(String projectId, Task task) {
-       if( taskRepository.findByTitleAndProjectId(task.getTitle(),projectId).isPresent()){
-           throw new IllegalArgumentException("Task name already exit");
-       }
+        if (taskRepository.findByTitleAndProjectId(task.getTitle(), projectId).isPresent()) {
+            throw new IllegalArgumentException("Task name already exit");
+        }
         task.setCreateDate(LocalDateTime.now()); // Set creation timestamp
         task.setLastUpdateTime(LocalDateTime.now()); // Set last update timestamp
         task.setProjectId(projectId);
@@ -66,17 +68,14 @@ public class TaskService {
     }
 
     //====================================filters====================================//
-    public List<Task>getFilteredTasks(String projectId,String statusId,String labelId){
-        if (statusId!=null&&labelId!=null){
+    public List<Task> getFilteredTasks(String projectId, String statusId, String labelId) {
+        if (statusId != null && labelId != null) {
             return getTasksByProjectIdAndStatusIdAndLabelId(projectId, statusId, labelId);
-        }
-        else if(statusId!=null){
-            return getTasksByProjectIdAndStatusId(projectId,statusId);
-        }
-        else if(labelId!=null){
+        } else if (statusId != null) {
+            return getTasksByProjectIdAndStatusId(projectId, statusId);
+        } else if (labelId != null) {
             return getTasksByProjectIdAndLabelId(projectId, labelId);
-        }
-        else {
+        } else {
             return getTasksByProjectId(projectId);
         }
     }
@@ -127,7 +126,7 @@ public class TaskService {
      * @param taskId      The ID of the task to update.
      * @param taskDetails The updated task details.
      * @return The updated task.
-     * @throws RuntimeException If the task is not found.
+     * @throws RuntimeException         If the task is not found.
      * @throws IllegalArgumentException If the task does not belong to the project.
      */
     public Task updateTask(String projectId, String taskId, Task taskDetails) {
@@ -138,18 +137,40 @@ public class TaskService {
                         throw new IllegalArgumentException("Task does not belong to this project");
                     }
 
-                    // Update task fields
-                    task.setTitle(taskDetails.getTitle());
-                    task.setDescription(taskDetails.getDescription());
-                    task.setLabelIds(taskDetails.getLabelIds());
-                    task.setStatusId(taskDetails.getStatusId());
-                    task.setDependencyIds(taskDetails.getDependencyIds());
-                    task.setDueDate(taskDetails.getDueDate());
-                    task.setStartDate(taskDetails.getStartDate());
-                    task.setEndDate(taskDetails.getEndDate());
-                    task.setEstimatedHours(taskDetails.getEstimatedHours());
-                    task.setActualHours(taskDetails.getActualHours());
-                    task.setLastUpdateTime(LocalDateTime.now()); // Update last update timestamp
+                    // Update task fields only if they are not null
+                    if (taskDetails.getTitle() != null) {
+                        task.setTitle(taskDetails.getTitle());
+                    }
+                    if (taskDetails.getDescription() != null) {
+                        task.setDescription(taskDetails.getDescription());
+                    }
+                    if (taskDetails.getLabelIds() != null) {
+                        task.setLabelIds(taskDetails.getLabelIds());
+                    }
+                    if (taskDetails.getStatusId() != null) {
+                        task.setStatusId(taskDetails.getStatusId());
+                    }
+                    if (taskDetails.getDependencyIds() != null) {
+                        task.setDependencyIds(taskDetails.getDependencyIds());
+                    }
+                    if (taskDetails.getDueDate() != null) {
+                        task.setDueDate(taskDetails.getDueDate());
+                    }
+                    if (taskDetails.getStartDate() != null) {
+                        task.setStartDate(taskDetails.getStartDate());
+                    }
+                    if (taskDetails.getEndDate() != null) {
+                        task.setEndDate(taskDetails.getEndDate());
+                    }
+                    if (taskDetails.getEstimatedHours() != null) {
+                        task.setEstimatedHours(taskDetails.getEstimatedHours());
+                    }
+                    if (taskDetails.getActualHours() != null) {
+                        task.setActualHours(taskDetails.getActualHours());
+                    }
+
+                    // Update the last update timestamp
+                    task.setLastUpdateTime(LocalDateTime.now());
 
                     return taskRepository.save(task);
                 })
@@ -180,35 +201,80 @@ public class TaskService {
     }
 
     /**
-     * Updates a task's labels, ensuring they belong to the same project.
+     * add label to task (label must be predefined and in same project with task).
      *
      * @param projectId The ID of the project.
      * @param taskId    The ID of the task to update.
-     * @param labelIds  (Optional) The new list of label IDs for the task.
-     * @return The updated task.
-     * @throws RuntimeException If the task, status, or labels are invalid.
+     * @param labelId   The new label ID for the task.
+     * @return the updated task
+     * @throws
      */
-    public Task updateTaskLabels(String projectId, String taskId, List<String> labelIds) {
-        // Find the task and ensure it belongs to the project
+    public Task addLabel(@NotNull String projectId, @NotNull String taskId, @NotNull String labelId) {
+        Task task = taskRepository.findByIdAndProjectId(taskId, projectId).orElseThrow(() -> new RuntimeException("Task not found in this project"));
+        //validate label
+        Label label = labelRepository.findByIdAndProjectId(labelId, projectId).orElseThrow(() -> new RuntimeException("this Label not found in this project"));
+        //if task was created without labels
+        if (task.getLabelIds() == null) {
+            task.setLabelIds(new ArrayList<>());
+        }
+        if (!task.getLabelIds().contains(labelId)) {
+            task.getLabelIds().add(labelId);
+        }
+        return taskRepository.save(task);
+    }
+
+    /**
+     * remove label from task (label must be predefined and in same project with task).
+     *
+     * @param projectId The ID of the project.
+     * @param taskId    The ID of the task to update.
+     * @param labelId   The new label ID for the task.
+     * @return the updated task
+     * @throws
+     */
+    public Task removeLabel(@NotNull String projectId, @NotNull String taskId, @NotNull String labelId) {
+        Task task = taskRepository.findByIdAndProjectId(taskId, projectId).orElseThrow(() -> new RuntimeException("Task not found in this project"));
+        //validate label
+        Label label = labelRepository.findByIdAndProjectId(labelId, projectId).orElseThrow(() -> new RuntimeException("this Label not found in this project"));
+        //if task was created without labels
+        if (task.getLabelIds() == null) {
+            task.setLabelIds(new ArrayList<>());
+        }
+        task.getLabelIds().remove(labelId);
+        return taskRepository.save(task);
+    }
+
+    public Task addDependencyToTask(@NotNull String projectId, @NotNull String taskId, @NotNull String dependencyId) {
         Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
                 .orElseThrow(() -> new RuntimeException("Task not found in this project"));
 
-        // Validate labels
-        List<Label> labels = labelRepository.findAllById(labelIds);
-        boolean allLabelsValid = labels.stream()
-                .allMatch(label -> label.getProjectId().equals(projectId));
-        if (!allLabelsValid) {
-            throw new IllegalArgumentException("One or more labels do not belong to this project");
+        Task dependency = taskRepository.findByIdAndProjectId(dependencyId, projectId)
+                .orElseThrow(() -> new RuntimeException("Dependency task not found in this project"));
+
+        if (task.getDependencyIds() == null) {
+            task.setDependencyIds(new ArrayList<>());
         }
+        if (!task.getDependencyIds().contains(dependency.getId())) {
+            task.getDependencyIds().add(dependency.getId());
+        }
+        return taskRepository.save(task);
+    }
 
-        // Update labels
-        task.setLabelIds(labelIds);
+    public Task removeDependencyfromTask(@NotNull String projectId, @NotNull String taskId, @NotNull String dependencyId) {
+        Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
+                .orElseThrow(() -> new RuntimeException("Task not found in this project"));
 
-        // Update the last update timestamp
-        task.setLastUpdateTime(LocalDateTime.now());
+        Task dependency = taskRepository.findByIdAndProjectId(dependencyId, projectId)
+                .orElseThrow(() -> new RuntimeException("Dependency task not found in this project"));
+
+        if (task.getDependencyIds() == null) {
+            task.setDependencyIds(new ArrayList<>());
+        }
+        task.getDependencyIds().remove(dependency.getId());
 
         return taskRepository.save(task);
     }
+
     //====================================Updates====================================//
 
     //====================================Delete====================================//

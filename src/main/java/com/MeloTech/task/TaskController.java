@@ -45,7 +45,7 @@ public class TaskController {
      */
     @GetMapping("")
     public ResponseEntity<?> getAllTasksInProject(@PathVariable String projectId,
-                                                  @RequestParam (required = false)String statusId,
+                                                  @RequestParam(required = false) String statusId,
                                                   @RequestParam(required = false) String labelId) {
         List<Task> tasks = taskService.getFilteredTasks(projectId, statusId, labelId);
         return ResponseEntity.ok(tasks);
@@ -109,25 +109,82 @@ public class TaskController {
     }
 
     /**
-     * Updates a task's labels.
+     * Adds a label to a task.
      *
      * @param projectId The ID of the project.
-     * @param taskId    The ID of the task to update.
-     * @param labelIds  The new list of label IDs for the task.
+     * @param taskId    The ID of the task.
+     * @param labelId   The ID of the label to add.
      * @return A response entity containing the updated task.
      */
-    @PatchMapping("/{taskId}/update-labels")
-    public ResponseEntity<?> updateTaskLabels(
+    @PatchMapping("/{taskId}/add-label")
+    public ResponseEntity<?> addLabelToTask(
             @PathVariable String projectId,
             @PathVariable String taskId,
-            @RequestParam List<String> labelIds) {
+            @RequestParam String labelId) {
         try {
-            return ResponseEntity.ok(taskService.updateTaskLabels(projectId, taskId, labelIds));
-
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.ok(taskService.addLabel(projectId, taskId, labelId));
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Removes a label from a task.
+     *
+     * @param projectId The ID of the project.
+     * @param taskId    The ID of the task.
+     * @param labelId   The ID of the label to remove.
+     * @return A response entity containing the updated task.
+     */
+    @PatchMapping("/{taskId}/remove-label")
+    public ResponseEntity<?> removeLabelFromTask(
+            @PathVariable String projectId,
+            @PathVariable String taskId,
+            @RequestParam String labelId) {
+        try {
+            return ResponseEntity.ok(taskService.removeLabel(projectId, taskId, labelId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Adds a dependency to a task.
+     *
+     * @param projectId    The ID of the project.
+     * @param taskId       The ID of the task.
+     * @param dependencyId The ID of the dependency task.
+     * @return A response entity containing the updated task.
+     */
+    @PatchMapping("/{taskId}/add-dependency")
+    public ResponseEntity<?> addDependencyToTask(
+            @PathVariable String projectId,
+            @PathVariable String taskId,
+            @RequestParam String dependencyId) {
+        try {
+            return ResponseEntity.ok(taskService.addDependencyToTask(projectId, taskId, dependencyId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    /**
+     * Removes a dependency from a task.
+     *
+     * @param projectId    The ID of the project.
+     * @param taskId       The ID of the task.
+     * @param dependencyId The ID of the dependency task.
+     * @return A response entity containing the updated task.
+     */
+    @PatchMapping("/{taskId}/remove-dependency")
+    public ResponseEntity<?> removeDependencyFromTask(
+            @PathVariable String projectId,
+            @PathVariable String taskId,
+            @RequestParam String dependencyId) {
+        try {
+            return ResponseEntity.ok(taskService.removeDependencyfromTask(projectId, taskId, dependencyId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
