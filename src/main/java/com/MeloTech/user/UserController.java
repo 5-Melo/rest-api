@@ -33,11 +33,17 @@ public class UserController {
             description = "Successfully retrieved users",
             content = @Content(
                     mediaType = "application/json",
-                    array = @ArraySchema(schema = @Schema(implementation = User.class))
+                    array = @ArraySchema(schema = @Schema(implementation = UserResponseDTO.class))
             )
     )
-    private ResponseEntity<ArrayList<User>> getAllUsers() {
-        return ResponseEntity.ok((ArrayList<User>) this.userRepository.findAll());
+    private ResponseEntity<ArrayList<UserResponseDTO>> getAllUsers() {
+        ArrayList<UserResponseDTO> userResponseDTOS = new ArrayList<>();
+        ArrayList<User> users = (ArrayList<User>) this.userRepository.findAll();
+
+        users.forEach(user -> {
+            userResponseDTOS.add(new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail()));
+        });
+        return ResponseEntity.ok(userResponseDTOS);
     }
 
     @GetMapping("/{id}")
@@ -48,7 +54,7 @@ public class UserController {
                     description = "User Retrieved",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = User.class)
+                            schema = @Schema(implementation = UserResponseDTO.class)
                     )
             ),
             @ApiResponse(
@@ -61,10 +67,14 @@ public class UserController {
             )
     })
     private ResponseEntity<?> getUser(@PathVariable String id) {
-        Optional<User> user = this.userRepository.findById(id);
+        Optional<User> optionalUser = this.userRepository.findById(id);
 
-        if (user.isPresent())
-            return new ResponseEntity<>(user, HttpStatus.OK);
+
+        if (optionalUser.isPresent()) {
+            User user = optionalUser.get();
+            UserResponseDTO userResponseDTO = new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail());
+            return ResponseEntity.ok(userResponseDTO);
+        }
 
         return new ResponseEntity<>("User not found", HttpStatus.NOT_FOUND);
 
@@ -76,11 +86,7 @@ public class UserController {
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "SignUp successful",
-                    content = @Content(
-                            mediaType = "application/json",
-                            schema = @Schema(implementation = User.class)
-                    )
+                    description = "SignUp successful"
             ),
             @ApiResponse(
                     responseCode = "409",
@@ -106,7 +112,8 @@ public class UserController {
         if (this.userRepository.existsByEmail(user.getEmail()))
             return new ResponseEntity<>("email is already registered", HttpStatus.CONFLICT);
 
-        return ResponseEntity.ok(this.userRepository.save(user));
+        this.userRepository.save(user);
+        return ResponseEntity.ok().build();
     }
 
 
@@ -118,7 +125,7 @@ public class UserController {
                     description = "Login successful",
                     content = @Content(
                             mediaType = "application/json",
-                            schema = @Schema(implementation = User.class)
+                            schema = @Schema(implementation = UserResponseDTO.class)
                     )
             ),
             @ApiResponse(
@@ -144,22 +151,33 @@ public class UserController {
         if (user == null)
             return new ResponseEntity<>("invalid username or password", HttpStatus.UNAUTHORIZED);
 
-        return ResponseEntity.ok(user);
+        UserResponseDTO userResponseDTO = new UserResponseDTO(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail());
+
+        return ResponseEntity.ok(userResponseDTO);
     }
 
 
     @GetMapping("/search")
     @Operation(summary = "User Search by prefix-matching")
-    @ApiResponse(
-            responseCode = "200",
-            description = "Successfully retrieved users",
-            content = @Content(
-                    mediaType = "application/json",
-                    array = @ArraySchema(schema = @Schema(implementation = User.class))
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Successfully retrieved usernames",
+                    content = @Content(
+                            mediaType = "application/json",
+                            array = @ArraySchema(schema = @Schema(type = "string"))
+                    )
             )
-    )
-    private ResponseEntity<ArrayList<User>> searchWithPrefix(@RequestParam String prefix) {
-        return ResponseEntity.ok(this.userRepository.findByUsernameStartingWith(prefix));
+    })
+
+    // returns the list of usernames that prefix-matched the @RequestParam
+    private ResponseEntity<ArrayList<String>> searchWithPrefix(@RequestParam String prefix) {
+        ArrayList<User> users = this.userRepository.findByUsernameStartingWith(prefix);
+        ArrayList<String> listOfUsernames = new ArrayList<>();
+        users.forEach(user -> {
+            listOfUsernames.add(user.getUsername());
+        });
+        return ResponseEntity.ok(listOfUsernames);
     }
 
 }

@@ -34,6 +34,7 @@ public class User {
             regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{5,}$",
             message = "Password must be at least 5 characters long, include an uppercase letter, a lowercase letter, a number, and a special character [@$!%*?&]"
     )
+
     private String password;
 
     @NotBlank(message = "email shouldn't be empty")
