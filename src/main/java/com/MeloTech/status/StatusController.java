@@ -11,7 +11,7 @@ import java.util.List;
  * Controller for managing statuses.
  */
 @RestController
-@RequestMapping("users/{userId}/projects/{projectId}/statuses")
+@RequestMapping("api/users/{userId}/projects/{projectId}/statuses")
 public class StatusController {
     private final StatusService statusService;
 
