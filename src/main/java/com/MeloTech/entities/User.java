@@ -7,40 +7,33 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
-public class User {
+public class User implements UserDetails {
 
     @Id
-    @Schema(accessMode = Schema.AccessMode.READ_ONLY) // exclude from request body when generating API documentation
 
     private String id;
 
-    @NotBlank(message = "firstName shouldn't be empty")
-    @Size(min = 3, max = 10, message = "firstName size in range [3-10]")
+
     private String firstName;
 
-    @NotBlank(message = "lastName shouldn't be empty")
-    @Size(min = 3, max = 10, message = "lastName size in range [3-10]")
+
     private String lastName;
 
-    @NotBlank(message = "username shouldn't be empty")
-    @Size(min = 3, max = 10, message = "username size in range [3-10]")
     @Indexed(unique = true) // Index on username
     private String username;
 
-    @Pattern(
-            regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[@$!%*?&])[A-Za-z\\d@$!%*?&]{5,}$",
-            message = "Password must be at least 5 characters long, include an uppercase letter, a lowercase letter, a number, and a special character [@$!%*?&]"
-    )
 
     private String password;
 
-    @NotBlank(message = "email shouldn't be empty")
-    @Email(message = "email format is required")
+
     private String email;
-    @Schema(accessMode = Schema.AccessMode.READ_ONLY) // exclude from request body when generating API documentation
 
     private ArrayList<String> projectIds = new ArrayList<>(); // Reference IDs for each project
 
@@ -73,18 +66,46 @@ public class User {
         return lastName;
     }
 
+
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    @Override
     public String getUsername() {
         return username;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return true;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return true;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return true;
     }
 
     public void setUsername(String username) {
         this.username = username;
     }
 
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return List.of();
+    }
+
+    @Override
     public String getPassword() {
         return password;
     }
@@ -115,7 +136,6 @@ public class User {
             this.projectIds.add(projectId);
         }
     }
-
 
     public void deleteProject(String projectId) {
         this.projectIds.remove(projectId);
