@@ -14,7 +14,7 @@ public class Task {
     @NotBlank(message = "Title shouldn't be empty")
     private String title;
     private String description;
-
+    private List<String>assigneeIds;
     private List<String> labelIds;
     private String statusId;
     private List<String> dependencyIds;
@@ -29,13 +29,14 @@ public class Task {
     private Double estimatedHours;//set by user
     private Double actualHours;//auto set after finish task
 
-    public Task(String id, String title, String description, List<String> labelIds, String statusId, List<String> dependencyIds, LocalDateTime createDate, LocalDateTime lastUpdateTime, LocalDateTime dueDate, LocalDateTime startDate, LocalDateTime endDate, Double estimatedHours, Double actualHours) {
+    public Task(String id, String title, String description, List<String> labelIds, String statusId, List<String> dependencyIds, List<String> assigneeIds, LocalDateTime createDate, LocalDateTime lastUpdateTime, LocalDateTime dueDate, LocalDateTime startDate, LocalDateTime endDate, Double estimatedHours, Double actualHours) {
         this.id = id;
         this.title = title;
         this.description = description;
         this.labelIds = labelIds;
         this.statusId = statusId;
         this.dependencyIds = dependencyIds;
+        this.assigneeIds = assigneeIds; // Initialize assigneeIds
         this.createDate = createDate;
         this.lastUpdateTime = lastUpdateTime;
         this.dueDate = dueDate;
@@ -44,6 +45,16 @@ public class Task {
         this.estimatedHours = estimatedHours;
         this.actualHours = actualHours;
     }
+
+    // Getters and Setters for assigneeIds
+    public List<String> getAssigneeIds() {
+        return assigneeIds;
+    }
+
+    public void setAssigneeIds(List<String> assigneeIds) {
+        this.assigneeIds = assigneeIds;
+    }
+
 
 
     public String getProjectId() {

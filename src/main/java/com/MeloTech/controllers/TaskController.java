@@ -473,7 +473,100 @@ public class TaskController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
-
+    @Operation(
+            summary = "Add an assignee to a task",
+            description = "Adds a single assignee to a task while ensuring it belongs to the specified project."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Assignee added to task successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Task.class),
+                            examples = @ExampleObject(
+                                    value = "{\"id\": \"task-123\", \"title\": \"Fix Bug\", \"description\": \"Fix the critical bug in the login module\", \"statusId\": \"status-123\", \"labelIds\": [\"label-456\"], \"dependencyIds\": [\"task-789\"], \"assigneeIds\": [\"user-1\"], \"dueDate\": \"2023-12-31\", \"startDate\": \"2023-10-01\", \"endDate\": \"2023-10-15\", \"estimatedHours\": 10, \"actualHours\": 5, \"projectId\": \"project-123\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid assignee ID or task update failed",
+                    content = @Content(
+                            mediaType = "text/plain",
+                            examples = @ExampleObject(value = "Invalid assignee ID provided")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Task not found",
+                    content = @Content(
+                            mediaType = "text/plain",
+                            examples = @ExampleObject(value = "Task not found")
+                    )
+            )
+    })
+    @PatchMapping("/{taskId}/add-assignee")
+    public ResponseEntity<?> addAssigneeToTask(
+            @PathVariable String projectId,
+            @PathVariable String taskId,
+            @RequestParam String assigneeId) {
+        try {
+            Task updatedTask = taskService.addAssignee(projectId, taskId, assigneeId);
+            return ResponseEntity.ok(updatedTask);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+    @Operation(
+            summary = "Remove an assignee from a task",
+            description = "Removes a single assignee from a task while ensuring it belongs to the specified project."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Assignee removed from task successfully",
+                    content = @Content(
+                            mediaType = "application/json",
+                            schema = @Schema(implementation = Task.class),
+                            examples = @ExampleObject(
+                                    value = "{\"id\": \"task-123\", \"title\": \"Fix Bug\", \"description\": \"Fix the critical bug in the login module\", \"statusId\": \"status-123\", \"labelIds\": [\"label-456\"], \"dependencyIds\": [\"task-789\"], \"assigneeIds\": [], \"dueDate\": \"2023-12-31\", \"startDate\": \"2023-10-01\", \"endDate\": \"2023-10-15\", \"estimatedHours\": 10, \"actualHours\": 5, \"projectId\": \"project-123\"}"
+                            )
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "400",
+                    description = "Invalid assignee ID or task update failed",
+                    content = @Content(
+                            mediaType = "text/plain",
+                            examples = @ExampleObject(value = "Invalid assignee ID provided")
+                    )
+            ),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Task not found",
+                    content = @Content(
+                            mediaType = "text/plain",
+                            examples = @ExampleObject(value = "Task not found")
+                    )
+            )
+    })
+    @PatchMapping("/{taskId}/remove-assignee")
+    public ResponseEntity<?> removeAssigneeFromTask(
+            @PathVariable String projectId,
+            @PathVariable String taskId,
+            @RequestParam String assigneeId) {
+        try {
+            Task updatedTask = taskService.removeAssignee(projectId, taskId, assigneeId);
+            return ResponseEntity.ok(updatedTask);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
     /**
      * Deletes a task.
      *
