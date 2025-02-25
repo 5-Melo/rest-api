@@ -274,7 +274,34 @@ public class TaskService {
 
         return taskRepository.save(task);
     }
+    public Task addAssignee(String projectId, String taskId, String assigneeId) {
+        Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
+                .orElseThrow(() -> new RuntimeException("Task not found in this project"));
 
+        if (task.getAssigneeIds() == null) {
+            task.setAssigneeIds(new ArrayList<>());
+        }
+
+
+        if (!task.getAssigneeIds().contains(assigneeId)) {
+            task.getAssigneeIds().add(assigneeId);
+        }
+
+
+        task.setLastUpdateTime(LocalDateTime.now());
+        return taskRepository.save(task);
+    }
+    public Task removeAssignee(String projectId, String taskId, String assigneeId) {
+        Task task = taskRepository.findByIdAndProjectId(taskId, projectId)
+                .orElseThrow(() -> new RuntimeException("Task not found in this project"));
+
+        if (task.getAssigneeIds() != null) {
+            task.getAssigneeIds().remove(assigneeId);
+        }
+
+        task.setLastUpdateTime(LocalDateTime.now());
+        return taskRepository.save(task);
+    }
     //====================================Updates====================================//
 
     //====================================Delete====================================//

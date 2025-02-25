@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 public class AuthenticationService {
 
     private final UserService userService;
+
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
 
