@@ -16,6 +16,8 @@ public interface UserRepository extends MongoRepository<User, String> {
 
     User findByUsername(String username);
 
+    User findByEmail(String email);
+
     ArrayList<User> findByUsernameIn(List<String> usernames);
     @Query("{ 'username': { $regex: '^?0', $options: 'i' } }")
     ArrayList<User> findByUsernameStartingWith(String prefix);

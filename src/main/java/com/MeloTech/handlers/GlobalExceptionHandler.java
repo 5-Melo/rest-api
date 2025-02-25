@@ -1,5 +1,8 @@
-package com.MeloTech.exceptions;
+package com.MeloTech.handlers;
 
+import com.MeloTech.exceptions.EmailAlreadyExistException;
+import com.MeloTech.exceptions.UserNotFoundException;
+import com.MeloTech.exceptions.UsernameAlreadyTakenException;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.security.SignatureException;
 import org.springframework.http.HttpStatusCode;

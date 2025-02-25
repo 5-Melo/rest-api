@@ -53,4 +53,24 @@ public class UserService {
         return listOfUsernames;
     }
 
+    public void addUser(User user) {
+        this.userRepository.save(user);
+    }
+
+    public boolean existsByUsername(String username) {
+        return this.userRepository.existsByUsername(username);
+    }
+
+    public boolean existsByEmail(String email) {
+        return this.userRepository.existsByEmail(email);
+    }
+
+    public User findByUsername(String username) {
+        return this.userRepository.findByUsername(username);
+    }
+
+    public User findByEmail(String email) {
+        return this.userRepository.findByEmail(email);
+    }
+
 }

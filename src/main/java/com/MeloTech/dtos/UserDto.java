@@ -1,6 +1,5 @@
 package com.MeloTech.dtos;
 
-// user's specific attributes returned in the response body (improves security and maintainability)
 public class UserDto {
     private String id;
     private String firstName;
