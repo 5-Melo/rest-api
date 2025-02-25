@@ -6,6 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.lang.NonNull;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -41,16 +42,28 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull HttpServletResponse response,
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
-        final String authHeader = request.getHeader("Authorization");
 
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+        String requestURI = request.getRequestURI();
+
+        // No authorization is required for these endpoints
+        if (requestURI.startsWith("/api/auth") ||
+                requestURI.startsWith("/swagger-ui") ||
+                requestURI.startsWith("/v3/api-docs") ||
+                requestURI.startsWith("/oauth2")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         try {
+            final String authHeader = request.getHeader("Authorization");
+
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                throw new AccessDeniedException("Invalid Authorization header");
+            }
+
             final String jwt = authHeader.substring(7);
             final String username = jwtService.extractUsername(jwt);
+
 
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -59,9 +72,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                            userDetails,
-                            null,
-                            userDetails.getAuthorities()
+                            userDetails, null, userDetails.getAuthorities()
+
                     );
 
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

@@ -1,10 +1,6 @@
 package com.MeloTech.entities;
 
-import io.swagger.v3.oas.annotations.media.Schema;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.Size;
+import com.MeloTech.enums.AuthProviderEnum;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.security.core.GrantedAuthority;
@@ -33,17 +29,21 @@ public class User implements UserDetails {
     private String password;
 
 
+    @Indexed(unique = true) // Index on username
     private String email;
 
     private ArrayList<String> projectIds = new ArrayList<>(); // Reference IDs for each project
 
+    private AuthProviderEnum authProviderEnum;
+
     public User(String firstName, String lastName, String username, String password,
-                String email) {
+                String email,AuthProviderEnum authProviderEnum) {
         this.firstName = firstName;
         this.lastName = lastName;
         this.username = username;
         this.password = password;
         this.email = email;
+        this.authProviderEnum=authProviderEnum;
     }
 
     public String getId() {
@@ -130,6 +130,13 @@ public class User implements UserDetails {
         this.projectIds = projectIds;
     }
 
+    public AuthProviderEnum getAuthProviderEnum() {
+        return authProviderEnum;
+    }
+
+    public void setAuthProviderEnum(AuthProviderEnum authProviderEnum) {
+        this.authProviderEnum = authProviderEnum;
+    }
 
     public void addProject(String projectId) {
         if (!this.projectIds.contains(projectId)) {
