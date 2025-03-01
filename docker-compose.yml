@@ -1,7 +1,14 @@
-version: '3.8'
 services:
   app:
-    build: .
+    build:
+      context: .
+      args:
+        - MONGO_URI=${MONGO_URI}
+        - MONGO_DATABASE=${MONGO_DATABASE}
+        - JWT_SECRET_KEY=${JWT_SECRET_KEY}
+        - JWT_EXPIRATION_TIME=${JWT_EXPIRATION_TIME}
+        - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+        - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
     env_file:
       - .env
     ports:

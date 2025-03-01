@@ -1,14 +1,21 @@
-# Use an official OpenJDK runtime as a parent image
 FROM openjdk:21-jdk
 
-# Set the working directory inside the container
+# Set working directory
 WORKDIR /app
 
-# Copy the JAR file into the container
-COPY target/MeloTech-0.0.1-SNAPSHOT.jar app.jar
+# Copy all project files into the container
+COPY . .
 
-# Expose the port your application runs on
-EXPOSE 8080
+# Pass environment variables from build args
+ARG MONGO_URI
+ARG MONGO_DATABASE
+ARG JWT_SECRET_KEY
+ARG JWT_EXPIRATION_TIME
+ARG GOOGLE_CLIENT_ID
+ARG GOOGLE_CLIENT_SECRET
 
-# Command to run the application
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Build JAR inside the container
+RUN ./mvnw clean package -DskipTests
+
+# Run the application
+CMD ["java", "-jar", "target/MeloTech-0.0.1-SNAPSHOT.jar"]
