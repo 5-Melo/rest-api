@@ -4,12 +4,18 @@ import com.MeloTech.dtos.UserDto;
 import com.MeloTech.entities.User;
 import com.MeloTech.exceptions.UserNotFoundException;
 import com.MeloTech.repositories.UserRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
+@Transactional
 public class UserService {
 
     private final UserRepository userRepository;
@@ -18,59 +24,98 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
+    public Page<UserDto> getAllUsers(Pageable pageable) {
+        return userRepository.findAll(pageable)
+                .map(user -> new UserDto(
+                    user.getId(), 
+                    user.getFirstName(), 
+                    user.getLastName(), 
+                    user.getUsername(), 
+                    user.getEmail()
+                ));
+    }
+
     public ArrayList<UserDto> getAllUsers() {
-        ArrayList<UserDto> userDtos = new ArrayList<>();
-        ArrayList<User> users = (ArrayList<User>) this.userRepository.findAll();
-
-        users.forEach(user -> {
-            userDtos.add(new UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail()));
-        });
-
-        return userDtos;
+        return userRepository.findAll().stream()
+                .map(user -> new UserDto(
+                    user.getId(), 
+                    user.getFirstName(), 
+                    user.getLastName(), 
+                    user.getUsername(), 
+                    user.getEmail()
+                ))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
     public UserDto getUser(String userId) {
-        Optional<User> optionalUser = this.userRepository.findById(userId);
+        return userRepository.findById(userId)
+                .map(user -> new UserDto(
+                    user.getId(), 
+                    user.getFirstName(), 
+                    user.getLastName(), 
+                    user.getUsername(), 
+                    user.getEmail()
+                ))
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+    }
 
-
-        if (optionalUser.isPresent()) {
-            User user = optionalUser.get();
-            UserDto userDto = new UserDto(user.getId(), user.getFirstName(), user.getLastName(), user.getUsername(), user.getEmail());
-            return userDto;
+    public ArrayList<UserDto> searchUsersWithPrefix(String prefix) {
+        if (prefix == null || prefix.trim().isEmpty()) {
+            throw new IllegalArgumentException("Search prefix cannot be null or empty");
         }
-
-        throw new UserNotFoundException("User not found with ID: " + userId);
-
+        
+        return userRepository.findByUsernameStartingWith(prefix.trim()).stream()
+                .map(user -> new UserDto(
+                    user.getId(), 
+                    user.getFirstName(), 
+                    user.getLastName(), 
+                    user.getUsername(), 
+                    user.getEmail()
+                ))
+                .collect(Collectors.toCollection(ArrayList::new));
     }
 
-
-    public ArrayList<String> searchWithPrefix(String prefix) {
-        ArrayList<User> users = this.userRepository.findByUsernameStartingWith(prefix);
-        ArrayList<String> listOfUsernames = new ArrayList<>();
-        users.forEach(user -> {
-            listOfUsernames.add(user.getUsername());
-        });
-        return listOfUsernames;
-    }
-
+    @Transactional
     public void addUser(User user) {
-        this.userRepository.save(user);
+        if (user == null) {
+            throw new IllegalArgumentException("User cannot be null");
+        }
+        userRepository.save(user);
     }
 
     public boolean existsByUsername(String username) {
-        return this.userRepository.existsByUsername(username);
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        return userRepository.existsByUsername(username.trim());
     }
 
     public boolean existsByEmail(String email) {
-        return this.userRepository.existsByEmail(email);
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+        return userRepository.existsByEmail(email.trim());
     }
 
     public User findByUsername(String username) {
-        return this.userRepository.findByUsername(username);
+        if (username == null || username.trim().isEmpty()) {
+            throw new IllegalArgumentException("Username cannot be null or empty");
+        }
+        User user = userRepository.findByUsername(username.trim());
+        if (user == null) {
+            throw new UserNotFoundException("User not found with username: " + username);
+        }
+        return user;
     }
 
     public User findByEmail(String email) {
-        return this.userRepository.findByEmail(email);
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email cannot be null or empty");
+        }
+        User user = userRepository.findByEmail(email.trim());
+        if (user == null) {
+            throw new UserNotFoundException("User not found with email: " + email);
+        }
+        return user;
     }
-
 }

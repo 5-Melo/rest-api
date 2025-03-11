@@ -7,6 +7,7 @@ import com.MeloTech.entities.User;
 import com.MeloTech.repositories.UserRepository;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,6 +15,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@Transactional
 public class ProjectService {
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
@@ -35,7 +37,6 @@ public class ProjectService {
         project.setProjectOwner(currentUser.getUsername());
         Project newProject = this.projectRepository.save(project);
 
-
         List<String> membersOfProject = newProject.getTeamMembers();
         membersOfProject.add(currentUser.getUsername());
 
@@ -46,7 +47,6 @@ public class ProjectService {
         this.userRepository.saveAll(users);
 
         return newProject;
-
     }
 
     public void deleteProject(String userId, String projectId) {
@@ -61,26 +61,21 @@ public class ProjectService {
         if (projectOptional.isEmpty())
             throw new IllegalArgumentException("Project with ID " + projectId + " not found!");
 
-
         Project project = projectOptional.get();
 
-        currentUser.deleteProject(projectId);
-        this.userRepository.save(currentUser);
+        // Only project owner can delete the project
+        if (!Objects.equals(project.getProjectOwner(), currentUser.getUsername())) {
+            throw new IllegalArgumentException("Only project owner can delete the project");
+        }
 
-        project.deleteTeamMember(currentUser.getUsername());
+        // Remove project from all team members
+        ArrayList<User> users = this.userRepository.findByUsernameIn(project.getTeamMembers());
+        users.forEach(user -> {
+            user.deleteProject(projectId);
+        });
 
-        if (Objects.equals(project.getProjectOwner(), currentUser.getUsername())) { // if he is the owner then remove the project from the database
-            ArrayList<User> users = this.userRepository.findByUsernameIn(project.getTeamMembers());
-            users.forEach(user -> {
-                user.deleteProject(projectId);
-            });
-
-            this.userRepository.saveAll(users);
-            this.projectRepository.delete(project);
-
-        } else this.projectRepository.save(project);
-
-
+        this.userRepository.saveAll(users);
+        this.projectRepository.delete(project);
     }
 
     public ArrayList<Project> getAllProjects(String userId) {
@@ -88,7 +83,8 @@ public class ProjectService {
         if (currentUserOptional.isEmpty())
             throw new IllegalArgumentException("User with ID " + userId + " not found!");
 
-        return this.projectRepository.findByIdIn(currentUserOptional.get().getProjectIds());
+        User currentUser = currentUserOptional.get();
+        return this.projectRepository.findByProjectOwnerOrTeamMembersContains(currentUser.getUsername());
     }
 
     public Project updateProject(String userId, String projectId, Project updatedProject) {
@@ -101,8 +97,12 @@ public class ProjectService {
         if (projectOptional.isEmpty())
             throw new IllegalArgumentException("Project with ID " + projectId + " not found!");
 
-
         Project existingProject = projectOptional.get();
+
+        // Only project owner can update the project
+        if (!Objects.equals(existingProject.getProjectOwner(), currentUserOptional.get().getUsername())) {
+            throw new IllegalArgumentException("Only project owner can update the project");
+        }
 
         ArrayList<User> oldProjectUsers = this.userRepository.findByUsernameIn(existingProject.getTeamMembers());
         oldProjectUsers.forEach(user -> {
@@ -121,8 +121,6 @@ public class ProjectService {
         });
         this.userRepository.saveAll(newProjectUsers);
 
-
         return projectRepository.save(existingProject);
-
     }
 }
