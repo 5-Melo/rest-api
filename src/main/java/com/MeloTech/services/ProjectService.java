@@ -34,17 +34,19 @@ public class ProjectService {
 
         User currentUser = currentUserOptional.get();
 
-        project.setProjectOwner(currentUser.getUsername());
+        project.setOwnerUserId(currentUser.getId());
         Project newProject = this.projectRepository.save(project);
 
-        List<String> membersOfProject = newProject.getTeamMembers();
-        membersOfProject.add(currentUser.getUsername());
+        // Add owner as a team member
+        if (newProject.getTeamMemberIds() == null) {
+            newProject.setTeamMemberIds(new ArrayList<>());
+        }
+        newProject.addTeamMemberId(currentUser.getId());
+        newProject = this.projectRepository.save(newProject);
 
-        ArrayList<User> users = this.userRepository.findByUsernameIn(membersOfProject);
-        users.forEach(user -> {
-            user.addProject(newProject.getId());
-        });
-        this.userRepository.saveAll(users);
+        // Update user's project list
+        currentUser.addProject(newProject.getId());
+        this.userRepository.save(currentUser);
 
         return newProject;
     }
@@ -64,12 +66,12 @@ public class ProjectService {
         Project project = projectOptional.get();
 
         // Only project owner can delete the project
-        if (!Objects.equals(project.getProjectOwner(), currentUser.getUsername())) {
+        if (!Objects.equals(project.getOwnerUserId(), currentUser.getId())) {
             throw new IllegalArgumentException("Only project owner can delete the project");
         }
 
-        // Remove project from all team members
-        ArrayList<User> users = this.userRepository.findByUsernameIn(project.getTeamMembers());
+        // Remove project from all team members' project lists
+        ArrayList<User> users = this.userRepository.findByIdIn(project.getTeamMemberIds());
         users.forEach(user -> {
             user.deleteProject(projectId);
         });
@@ -83,8 +85,7 @@ public class ProjectService {
         if (currentUserOptional.isEmpty())
             throw new IllegalArgumentException("User with ID " + userId + " not found!");
 
-        User currentUser = currentUserOptional.get();
-        return this.projectRepository.findByProjectOwnerOrTeamMembersContains(currentUser.getUsername());
+        return this.projectRepository.findByOwnerUserIdOrTeamMemberIdsContains(userId);
     }
 
     public Project updateProject(String userId, String projectId, Project updatedProject) {
@@ -100,22 +101,24 @@ public class ProjectService {
         Project existingProject = projectOptional.get();
 
         // Only project owner can update the project
-        if (!Objects.equals(existingProject.getProjectOwner(), currentUserOptional.get().getUsername())) {
+        if (!Objects.equals(existingProject.getOwnerUserId(), userId)) {
             throw new IllegalArgumentException("Only project owner can update the project");
         }
 
-        ArrayList<User> oldProjectUsers = this.userRepository.findByUsernameIn(existingProject.getTeamMembers());
+        // Remove project from old team members' project lists
+        ArrayList<User> oldProjectUsers = this.userRepository.findByIdIn(existingProject.getTeamMemberIds());
         oldProjectUsers.forEach(user -> {
             user.deleteProject(existingProject.getId());
         });
         this.userRepository.saveAll(oldProjectUsers);
 
-        existingProject.getTeamMembers().clear();
+        existingProject.getTeamMemberIds().clear();
         // Copy non-null properties from updatedProject to existingProject
         modelMapper.getConfiguration().setSkipNullEnabled(true); // Skip null values
         modelMapper.map(updatedProject, existingProject);
 
-        ArrayList<User> newProjectUsers = this.userRepository.findByUsernameIn(existingProject.getTeamMembers());
+        // Add project to new team members' project lists
+        ArrayList<User> newProjectUsers = this.userRepository.findByIdIn(existingProject.getTeamMemberIds());
         newProjectUsers.forEach(user -> {
             user.addProject(existingProject.getId());
         });

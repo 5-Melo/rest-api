@@ -21,4 +21,6 @@ public interface UserRepository extends MongoRepository<User, String> {
     ArrayList<User> findByUsernameIn(List<String> usernames);
     @Query("{ 'username': { $regex: '^?0', $options: 'i' } }")
     ArrayList<User> findByUsernameStartingWith(String prefix);
+
+    ArrayList<User> findByIdIn(List<String> userIds);
 }

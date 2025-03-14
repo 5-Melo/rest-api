@@ -17,16 +17,17 @@ public class Project {
     private LocalDate startDate;
     private LocalDate endDate;
     private ProjectStatusEnum projectStatusEnum;
-    private ArrayList<String> teamMembers;  // Reference username's for each member
+    private ArrayList<String> teamMemberIds;  // Reference user IDs for each member
     @Schema(accessMode = Schema.AccessMode.READ_ONLY)
-    private String projectOwner; // Reference username for user who created the project
+    private String ownerUserId; // Reference user ID for user who created the project
 
-    public Project(String title, String description, LocalDate startDate, LocalDate endDate, String projectOwner) {
+    public Project(String title, String description, LocalDate startDate, LocalDate endDate, String ownerUserId) {
         this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.projectOwner = projectOwner;
+        this.ownerUserId = ownerUserId;
+        this.teamMemberIds = new ArrayList<>();
     }
 
     public String getId() {
@@ -77,29 +78,29 @@ public class Project {
         this.projectStatusEnum = projectStatusEnum;
     }
 
-    public ArrayList<String> getTeamMembers() {
-        return teamMembers;
+    public ArrayList<String> getTeamMemberIds() {
+        return teamMemberIds;
     }
 
-    public void setTeamMembers(ArrayList<String> teamMembers) {
-        this.teamMembers = teamMembers;
+    public void setTeamMemberIds(ArrayList<String> teamMemberIds) {
+        this.teamMemberIds = teamMemberIds;
     }
 
-    public String getProjectOwner() {
-        return projectOwner;
+    public String getOwnerUserId() {
+        return ownerUserId;
     }
 
-    public void setProjectOwner(String projectOwner) {
-        this.projectOwner = projectOwner;
+    public void setOwnerUserId(String ownerUserId) {
+        this.ownerUserId = ownerUserId;
     }
 
-    public void addTeamMember(String memberUsername) {
-        if (!this.teamMembers.contains(memberUsername)) {
-            this.teamMembers.add(memberUsername);
+    public void addTeamMemberId(String userId) {
+        if (!this.teamMemberIds.contains(userId)) {
+            this.teamMemberIds.add(userId);
         }
     }
 
-    public void deleteTeamMember(String memberUsername) {
-        this.teamMembers.remove(memberUsername);
+    public void deleteTeamMemberId(String userId) {
+        this.teamMemberIds.remove(userId);
     }
 }

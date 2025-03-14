@@ -2,6 +2,7 @@ package com.MeloTech.controllers;
 
 import com.MeloTech.dtos.LoginUserDto;
 import com.MeloTech.dtos.UserDto;
+import com.MeloTech.dtos.UpdateUserDto;
 import com.MeloTech.entities.User;
 import com.MeloTech.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -121,5 +122,86 @@ public class UserController {
             @Parameter(description = "Username prefix to search for", required = true)
             @RequestParam String prefix) {
         return ResponseEntity.ok(this.userService.searchUsersWithPrefix(prefix));
+    }
+
+    @PutMapping("/{id}")
+    @Operation(
+        summary = "Update user information",
+        description = "Update user details including firstName, lastName, username, email, and optional password change. " +
+                     "If updating password, both current and new password must be provided. " +
+                     "Username and email must be unique across all users."
+    )
+    @ApiResponses({
+        @ApiResponse(
+            responseCode = "200",
+            description = "User updated successfully",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = UserDto.class),
+                examples = @ExampleObject(value = """
+                    {
+                        "id": "123",
+                        "firstName": "John",
+                        "lastName": "Doe",
+                        "username": "johndoe",
+                        "email": "john@example.com"
+                    }
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Invalid input or validation error",
+            content = @Content(
+                mediaType = "application/json",
+                examples = {
+                    @ExampleObject(name = "Password Required", value = "Current password is required to update password"),
+                    @ExampleObject(name = "Invalid Password", value = "Current password is incorrect"),
+                    @ExampleObject(name = "Email Taken", value = "Email is already taken"),
+                    @ExampleObject(name = "Username Taken", value = "Username is already taken"),
+                    @ExampleObject(name = "Invalid Size", value = "firstName size in range [3-10]")
+                }
+            )
+        ),
+        @ApiResponse(
+            responseCode = "404",
+            description = "User not found",
+            content = @Content(
+                mediaType = "application/json",
+                schema = @Schema(implementation = String.class)
+            )
+        )
+    })
+    public ResponseEntity<UserDto> updateUser(
+            @Parameter(description = "ID of the user to update", required = true)
+            @PathVariable String id,
+            @Parameter(
+                description = "Updated user information. All fields are optional. " +
+                            "If updating password, both currentPassword and newPassword must be provided.",
+                required = true,
+                schema = @Schema(implementation = UpdateUserDto.class),
+                examples = {
+                    @ExampleObject(name = "Basic Update", value = """
+                        {
+                            "firstName": "John",
+                            "lastName": "Doe",
+                            "username": "johndoe",
+                            "email": "john@example.com"
+                        }
+                        """),
+                    @ExampleObject(name = "With Password Update", value = """
+                        {
+                            "firstName": "John",
+                            "lastName": "Doe",
+                            "username": "johndoe",
+                            "email": "john@example.com",
+                            "currentPassword": "OldPass123!",
+                            "newPassword": "NewPass123!"
+                        }
+                        """)
+                }
+            )
+            @Valid @RequestBody UpdateUserDto updateUserDto) {
+        return ResponseEntity.ok(userService.updateUser(id, updateUserDto));
     }
 }

@@ -1,11 +1,14 @@
 package com.MeloTech.services;
 
 import com.MeloTech.dtos.UserDto;
+import com.MeloTech.dtos.UpdateUserDto;
 import com.MeloTech.entities.User;
 import com.MeloTech.exceptions.UserNotFoundException;
 import com.MeloTech.repositories.UserRepository;
+import com.MeloTech.repositories.ProjectRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,9 +22,13 @@ import java.util.stream.Collectors;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final ProjectRepository projectRepository;
 
-    public UserService(UserRepository userRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, ProjectRepository projectRepository) {
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.projectRepository = projectRepository;
     }
 
     public Page<UserDto> getAllUsers(Pageable pageable) {
@@ -117,5 +124,61 @@ public class UserService {
             throw new UserNotFoundException("User not found with email: " + email);
         }
         return user;
+    }
+
+    @Transactional
+    public UserDto updateUser(String userId, UpdateUserDto updateUserDto) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with ID: " + userId));
+
+        // Handle password update if provided
+        if (updateUserDto.getNewPassword() != null) {
+            if (updateUserDto.getCurrentPassword() == null) {
+                throw new IllegalArgumentException("Current password is required to update password");
+            }
+            
+            // Verify current password
+            if (!passwordEncoder.matches(updateUserDto.getCurrentPassword(), user.getPassword())) {
+                throw new IllegalArgumentException("Current password is incorrect");
+            }
+            
+            // Update password
+            user.setPassword(passwordEncoder.encode(updateUserDto.getNewPassword()));
+        }
+
+        // Update other fields if provided
+        if (updateUserDto.getFirstName() != null) {
+            user.setFirstName(updateUserDto.getFirstName());
+        }
+        if (updateUserDto.getLastName() != null) {
+            user.setLastName(updateUserDto.getLastName());
+        }
+        if (updateUserDto.getUsername() != null && !updateUserDto.getUsername().equals(user.getUsername())) {
+            // Check if username is already taken by another user
+            if (userRepository.existsByUsername(updateUserDto.getUsername())) {
+                throw new IllegalArgumentException("Username is already taken");
+            }
+            
+            // Update username in user entity
+            user.setUsername(updateUserDto.getUsername());
+        }
+        
+        if (updateUserDto.getEmail() != null) {
+            // Check if email is already taken by another user
+            if (userRepository.existsByEmail(updateUserDto.getEmail()) && 
+                !user.getEmail().equals(updateUserDto.getEmail())) {
+                throw new IllegalArgumentException("Email is already taken");
+            }
+            user.setEmail(updateUserDto.getEmail());
+        }
+
+        User updatedUser = userRepository.save(user);
+        return new UserDto(
+            updatedUser.getId(),
+            updatedUser.getFirstName(),
+            updatedUser.getLastName(),
+            updatedUser.getUsername(),
+            updatedUser.getEmail()
+        );
     }
 }

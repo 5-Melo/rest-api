@@ -10,6 +10,13 @@ import java.util.List;
 public interface ProjectRepository extends MongoRepository<Project, String> {
     ArrayList<Project> findByIdIn(List<String> projectIds);
     
-    @Query("{ $or: [ { 'projectOwner': ?0 }, { 'teamMembers': ?0 } ] }")
-    ArrayList<Project> findByProjectOwnerOrTeamMembersContains(String username);
+    @Query("{ $or: [ { 'ownerUserId': ?0 }, { 'teamMemberIds': ?0 } ] }")
+    ArrayList<Project> findByOwnerUserIdOrTeamMemberIdsContains(String userId);
+
+    // Find projects where user is the owner
+    ArrayList<Project> findByOwnerUserId(String userId);
+
+    // Find projects where user is a team member
+    @Query("{ 'teamMemberIds': ?0 }")
+    ArrayList<Project> findByTeamMemberIdsContains(String userId);
 }
